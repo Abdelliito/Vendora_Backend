@@ -23,6 +23,17 @@ router.get('/mine',         protect,             getMyOrders);
 router.get('/vendor/sales', protect, vendorOnly, getVendorSales);
 router.get('/',             protect, adminOnly,  getAllOrders);
 router.get('/:id',          protect, validateMongoId, validate,       getOrderById);
-router.put('/:id/status',   protect, vendorOnly, validateMongoId, validateOrderStatus, validate, updateOrderStatus);
+// Admin: update global order status
+router.put('/:id/status',   protect, adminOnly, validateMongoId, validateOrderStatus, validate, updateOrderStatus);
+
+// Vendor: update status of their own item in an order
+router.patch('/:orderId/items/:itemId/status',
+  protect,
+  vendorOnly,
+  validateMongoId,
+  validateOrderStatus,
+  validate,
+  require('../controllers/orderController.js').updateOrderItemStatus
+);
 
 export default router;

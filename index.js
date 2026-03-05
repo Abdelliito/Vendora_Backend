@@ -11,8 +11,10 @@ import productRoutes from './routes/productRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import vendorRoutes from './routes/vendorRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+
 import uploadRoutes from './routes/uploadRoutes.js';
 import stripeRoutes from './routes/stripeRoutes.js';
+import cartRoutes from './routes/cartRoutes.js';
 
 dotenv.config();
 
@@ -48,12 +50,14 @@ app.get('/api/health', (_req, res) => {
 });
 
 // ── API routes ────────────────────────────────────────────────────────────────
+
 app.use('/api/auth',     authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders',   orderRoutes);
 app.use('/api/vendors',  vendorRoutes);
 app.use('/api/admin',    adminRoutes);
 app.use('/api/upload',   uploadRoutes);
+app.use('/api/cart',     cartRoutes);
 
 // ── Error handling ────────────────────────────────────────────────────────────
 app.use(notFound);

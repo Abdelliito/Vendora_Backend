@@ -1,3 +1,61 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc    Vendor updates status of their own item in an order
+// @route   PATCH /api/orders/:orderId/items/:itemId/status
+// @access  Private — Vendor
+// ─────────────────────────────────────────────────────────────────────────────
+export const updateOrderItemStatus = asyncHandler(async (req, res) => {
+  const { status } = req.body;
+  const { orderId, itemId } = req.params;
+  const order = await Order.findById(orderId);
+  if (!order) {
+    res.status(404);
+    throw new Error('Order not found');
+  }
+  // Find the item
+  const item = order.items.id(itemId);
+  if (!item) {
+    res.status(404);
+    throw new Error('Order item not found');
+  }
+  // Only the vendor who owns this item can update
+  if (item.vendorId.toString() !== req.user._id.toString()) {
+    res.status(403);
+    throw new Error('Not authorised — this item does not belong to you');
+  }
+  // Stricter status transition validation
+  const validTransitions = {
+    Pending:     ['Processing', 'Cancelled'],
+    Processing:  ['Shipped', 'Cancelled'],
+    Shipped:     ['Delivered', 'Cancelled'],
+    Delivered:   [],
+    Cancelled:   [],
+  };
+  const current = item.itemStatus;
+  if (!validTransitions[current] || !validTransitions[current].includes(status)) {
+    res.status(400);
+    throw new Error(`Invalid status transition from '${current}' to '${status}'`);
+  }
+  // Set status and timestamp
+  item.itemStatus = status;
+  if (status === 'Shipped') item.shippedAt = new Date();
+  if (status === 'Delivered') item.deliveredAt = new Date();
+  if (status === 'Cancelled') item.cancelledAt = new Date();
+  // Save order
+  await order.save();
+  // Auto-update global order status if all items delivered/cancelled
+  const allDelivered = order.items.every(i => i.itemStatus === 'Delivered');
+  const allCancelled = order.items.every(i => i.itemStatus === 'Cancelled');
+  if (allDelivered) {
+    order.status = 'Delivered';
+    order.isDelivered = true;
+    order.deliveredAt = new Date();
+    await order.save();
+  } else if (allCancelled) {
+    order.status = 'Cancelled';
+    await order.save();
+  }
+  res.status(200).json({ success: true, item, order });
+});
 import asyncHandler from 'express-async-handler';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
@@ -219,12 +277,26 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
     }
   }
 
+  // Stricter status transition validation for global order status
+  const validTransitions = {
+    Pending:    ['Paid', 'Cancelled'],
+    Paid:       ['Processing', 'Cancelled', 'Refunded'],
+    Processing: ['Shipped', 'Cancelled', 'Refunded'],
+    Shipped:    ['Delivered', 'Cancelled', 'Refunded'],
+    Delivered:  ['Refunded'],
+    Cancelled:  [],
+    Refunded:   [],
+  };
+  const current = order.status;
+  if (!validTransitions[current] || !validTransitions[current].includes(status)) {
+    res.status(400);
+    throw new Error(`Invalid status transition from '${current}' to '${status}'`);
+  }
   order.status = status;
   if (status === 'Delivered') {
     order.isDelivered  = true;
     order.deliveredAt  = new Date();
   }
-
   await order.save();
   res.status(200).json({ success: true, order });
 });

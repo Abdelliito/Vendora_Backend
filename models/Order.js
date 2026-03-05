@@ -32,6 +32,10 @@ const orderItemSchema = new mongoose.Schema(
       enum:    ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
       default: 'Pending',
     },
+    // Timestamps for fulfillment events
+    shippedAt:    { type: Date },
+    deliveredAt:  { type: Date },
+    cancelledAt:  { type: Date },
   },
   { _id: false }
 );
