@@ -14,8 +14,9 @@
 export const buildProductQuery = (query) => {
   const filter = { isActive: true };
 
-  if (query.keyword) {
-    filter.$text = { $search: query.keyword };
+  const keyword = query.keyword || query.search;
+  if (keyword) {
+    filter.$text = { $search: keyword };
   }
 
   if (query.category) {
@@ -44,9 +45,16 @@ export const buildProductQuery = (query) => {
  */
 export const buildSortOption = (sort) => {
   switch (sort) {
-    case 'price_asc':  return { price: 1 };
-    case 'price_desc': return { price: -1 };
-    case 'rating':     return { rating: -1 };
+    case 'price_asc':
+    case 'price-low':
+      return { price: 1 };
+    case 'price_desc':
+    case 'price-high':
+      return { price: -1 };
+    case 'rating':
+      return { rating: -1 };
+    case 'name':
+      return { name: 1 };
     case 'newest':
     default:           return { createdAt: -1 };
   }

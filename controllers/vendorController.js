@@ -11,9 +11,21 @@ import Order from '../models/Order.js';
 export const getAllVendors = asyncHandler(async (req, res) => {
   const vendors = await User.find({ role: 'Vendor', isActive: true })
     .select('name storeInfo avatar createdAt')
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
 
-  res.status(200).json({ success: true, count: vendors.length, vendors });
+  // Add product count for each vendor
+  const vendorsWithCount = await Promise.all(
+    vendors.map(async (vendor) => {
+      const productCount = await Product.countDocuments({ 
+        vendorId: vendor._id, 
+        isActive: true 
+      });
+      return { ...vendor, productCount };
+    })
+  );
+
+  res.status(200).json({ success: true, count: vendorsWithCount.length, vendors: vendorsWithCount });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

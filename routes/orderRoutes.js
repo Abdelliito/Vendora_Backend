@@ -6,6 +6,7 @@ import {
   getAllOrders,
   getOrderById,
   updateOrderStatus,
+  updateOrderItemStatus,
 } from '../controllers/orderController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { adminOnly, vendorOnly } from '../middleware/roleMiddleware.js';
@@ -33,7 +34,7 @@ router.patch('/:orderId/items/:itemId/status',
   validateMongoId,
   validateOrderStatus,
   validate,
-  require('../controllers/orderController.js').updateOrderItemStatus
+  updateOrderItemStatus
 );
 
 export default router;
