@@ -33,9 +33,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    process.env.FRONTEND_URL
+    "https://vendora-frontend-six.vercel.app"
   ],
-  credentials: true,
+  credentials: true
 }));
 
 if (process.env.NODE_ENV === 'development') {
