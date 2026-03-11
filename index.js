@@ -31,7 +31,10 @@ app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripe
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    "http://localhost:5173",
+    process.env.FRONTEND_URL
+  ],
   credentials: true,
 }));
 
@@ -47,6 +50,10 @@ app.get('/api/health', (_req, res) => {
     env: process.env.NODE_ENV,
     timestamp: new Date().toISOString(),
   });
+});
+
+app.get('/', (_req, res) => {
+  res.send('Vendora API is running');
 });
 
 // ── API routes ────────────────────────────────────────────────────────────────
